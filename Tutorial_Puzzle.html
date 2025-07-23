@@ -2047,6 +2047,7 @@
             
             if (percentage === 100) {
                 pagesRecovered++;
+                document.getElementById('pageCount').textContent = pagesRecovered;
                 showMessage(`Page ${pagesRecovered} restored! The ancient knowledge lives on!`, 'success');
                 isPuzzleMode = false;
                 
@@ -2485,6 +2486,7 @@
                 });
                 
                 pagesRecovered++;
+                document.getElementById('pageCount').textContent = pagesRecovered;
                 
                 // Redraw the final correct tree
                 setTimeout(() => {
