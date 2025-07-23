@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Magic Book - Tutorial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Creepster&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e8dcc6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background elements */
+        .magic-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffd700;
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            box-shadow: 0 0 10px #ffd700;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        .game-title {
+            font-family: 'Creepster', cursive, Arial, sans-serif;
+            font-size: 4rem;
+            color: #ffd700;
+            text-shadow: 
+                2px 2px 0px #8b4513,
+                4px 4px 0px #654321,
+                0 0 10px #ffd700,
+                0 0 20px #ffd700;
+            margin-bottom: 20px;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.2;
+            z-index: 10;
+            position: relative;
+        }
+        
+        @keyframes titleGlow {
+            from { 
+                text-shadow: 2px 2px 0px #8b4513, 4px 4px 0px #654321, 0 0 10px #ffd700, 0 0 20px #ffd700;
+                transform: scale(1);
+            }
+            to { 
+                text-shadow: 2px 2px 0px #8b4513, 4px 4px 0px #654321, 0 0 15px #ffd700, 0 0 30px #ffd700, 0 0 45px #ffd700;
+                transform: scale(1.02);
+            }
+        }
+
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Overlay styles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .overlay-content {
+            background: linear-gradient(135deg, #2d1b69 0%, #1a1a2e 50%, #16213e 100%);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            border: 3px solid #ffd700;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .overlay-content h2 {
+            color: #ffd700;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .overlay-content h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .overlay-content p {
+            font-size: 1.1em;
+            line-height: 1.5;
+            margin-bottom: 15px;
+            color: #e8dcc6;
+        }
+
+        .overlay-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .overlay-content li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+            font-size: 1em;
+        }
+
+        .close-btn {
+            background: linear-gradient(135deg, #ffd700, #ffeb3b);
+            color: #1a1a2e;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .close-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .close-btn:disabled {
+            background: #4a5568;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .close-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Multi-page overlay navigation */
+        .overlay-page {
+            display: none;
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .overlay-page.active {
+            display: block;
+        }
+
+        .overlay-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
+            color: #e8dcc6;
+            border: 2px solid #ffd700;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .nav-btn:hover {
+            background: linear-gradient(135deg, #ffd700, #ffeb3b);
+            color: #1a1a2e;
+        }
+
+        .nav-btn:disabled {
+            background: #2d3748;
+            color: #4a5568;
+            cursor: not-allowed;
+            border-color: #4a5568;
+        }
+
+        .page-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4a5568;
+            border: 2px solid #ffd700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .page-dot.active {
+            background: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .page-dot.completed {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        /* Content area for after overlay closes */
+        .main-content {
+            display: none;
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .main-content h1 {
+            color: #ffd700;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #c0c0c0;
+            margin-bottom: 40px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .menu-container {
+            background: rgba(139, 69, 19, 0.3);
+            border: 3px solid #ffd700;
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            box-shadow: 
+                0 0 30px rgba(255, 215, 0, 0.3),
+                inset 0 0 30px rgba(255, 215, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .menu-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .menu-button {
+            background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
+            border: 2px solid #ffd700;
+            color: #ffd700;
+            padding: 20px 40px;
+            font-size: 1.4rem;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .menu-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .menu-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 10px 20px rgba(0, 0, 0, 0.5),
+                0 0 30px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, #a0522d 0%, #cd853f 100%);
+        }
+
+        .menu-button:hover::before {
+            left: 100%;
+        }
+
+        .menu-button:active {
+            transform: translateY(-2px);
+        }
+
+        .button-icon {
+            margin-right: 10px;
+            font-size: 1.6rem;
+        }
+
+        .button-description {
+            font-size: 0.9rem;
+            color: #d4af37;
+            font-weight: 400;
+            margin-top: 5px;
+            font-style: italic;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #666, #888);
+            border: 2px solid #ccc;
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            font-weight: normal;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #777, #999);
+        }
+
+        .review-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border: 2px solid #66BB6A;
+            color: #fff;
+            padding: 12px 25px;
+            font-size: 0.9rem;
+            font-family: 'Georgia', serif;
+            font-weight: normal;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .review-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            background: linear-gradient(135deg, #66BB6A, #4CAF50);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .overlay-content {
+                padding: 30px 20px;
+                max-width: 95%;
+            }
+            
+            .overlay-content h2 {
+                font-size: 1.8em;
+            }
+            
+            .overlay-content h3 {
+                font-size: 1.1em;
+            }
+            
+            .overlay-content p {
+                font-size: 1em;
+            }
+            
+            .overlay-nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-btn {
+                min-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="magic-particles"></div>
+
+    <div class="overlay" id="rulesOverlay">
+        <div class="overlay-content">
+            <h1 class="game-title">The Magic Book</h1>
+            <h2>B+ Tree Magic Rules</h2>
+            
+            <div class="overlay-page active" id="page1">
+                <h3>What is "Order" in B+ Trees?</h3>
+                <p><strong>Order</strong> determines how many keys each node can hold:</p>
+                <ul>
+                    <li><strong>Order = 3:</strong> Each node can hold at most 2 keys</li>
+                    <li><strong>Order = 5:</strong> Each node can hold at most 4 keys</li>
+                    <li><strong>For this tutorial:</strong> We'll use Order = 3 to keep it simple</li>
+                </ul>
+                
+                <h3>Node Types:</h3>
+                <ul>
+                    <li><strong>Leaf nodes:</strong> Store actual data values</li>
+                    <li><strong>Internal nodes:</strong> Store keys for navigation only</li>
+                    <li><strong>Height-balanced:</strong> All leaves at same depth from root</li>
+                    <li><strong>Linked:</strong> Leaves connect left to right for range queries</li>
+                </ul>
+            </div>
+
+            <div class="overlay-page" id="page2">
+                <h3>Structure Rules (Order = 3)</h3>
+                <p>With Order = 3, here are the specific constraints:</p>
+                <ul>
+                    <li>Each node can have at most <strong>2 keys</strong> (Order - 1)</li>
+                    <li>Each internal node can have at most <strong>3 children</strong> (Order)</li>
+                    <li>Internal nodes (except root) must have at least <strong>2 children</strong> (⌈3/2⌉ = 2)</li>
+                    <li>Leaf nodes (except root) must have at least <strong>1 key</strong> (⌈2/2⌉ = 1)</li>
+                    <li>Keys in each node are kept in sorted order</li>
+                </ul>
+
+                <h3>The Sacred Balance</h3>
+                <p>To maintain the tree's magical balance:</p>
+                <ul>
+                    <li>All leaf nodes must be at the same level (height-balanced)</li>
+                    <li>Internal nodes (except root) must have at least ⌈m/2⌉ children</li>
+                    <li>Leaf nodes (except root) must have at least ⌈(m-1)/2⌉ keys</li>
+                    <li>This keeps search time consistent!</li>
+                </ul>
+            </div>
+
+            <div class="overlay-page" id="page3">
+                <h3>How to Search</h3>
+                <p>Finding data in a B+ Tree:</p>
+                <ul>
+                    <li>Start at the root node</li>
+                    <li>Compare your search key with the node's keys</li>
+                    <li>Follow the appropriate child pointer</li>
+                    <li>Repeat until you reach a leaf node</li>
+                    <li>Search the leaf node for your data!</li>
+                </ul>
+
+                <h3>Insertion Magic</h3>
+                <p>Adding new data follows these steps:</p>
+                <ul>
+                    <li>Navigate to the appropriate leaf node</li>
+                    <li>If leaf has space, insert the key and data</li>
+                    <li>If leaf is full, split it into two nodes</li>
+                    <li>Promote middle key to parent</li>
+                    <li>Repeat if parent overflows (cascading splits)</li>
+                </ul>
+            </div>
+
+            <div class="overlay-page" id="page4">
+                <h3>Deletion Sorcery</h3>
+                <p>Removing data requires careful balance maintenance:</p>
+                <ul>
+                    <li>Navigate to the leaf containing the key</li>
+                    <li>Remove the key and data</li>
+                    <li>If leaf becomes under-full, try to borrow from siblings</li>
+                    <li>If borrowing fails, merge with a sibling</li>
+                    <li>Update parent nodes as needed</li>
+                </ul>
+
+                <h3>Why B+ Trees Are Magical</h3>
+                <ul>
+                    <li><strong>Fast Search:</strong> Balanced structure = predictable performance</li>
+                    <li><strong>Range Queries:</strong> Linked leaves make sorting easy</li>
+                    <li><strong>Disk Friendly:</strong> Fewer disk reads needed</li>
+                    <li><strong>Multi-User:</strong> Great for databases with many users</li>
+                </ul>
+                
+                <p style="margin-top: 20px;"><strong>Ready to practice with real examples?</strong></p>
+            </div>
+
+            <div class="overlay-nav">
+                <button class="nav-btn" id="prevBtn" onclick="previousPage()">← Previous</button>
+                <div class="page-indicator">
+                    <div class="page-dot active" onclick="goToPage(1)"></div>
+                    <div class="page-dot" onclick="goToPage(2)"></div>
+                    <div class="page-dot" onclick="goToPage(3)"></div>
+                    <div class="page-dot" onclick="goToPage(4)"></div>
+                </div>
+                <button class="nav-btn" id="nextBtn" onclick="nextPage()">Next →</button>
+            </div>
+            
+            <button class="close-btn" id="understandBtn" onclick="closeOverlay()" disabled>I Understand!</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content" id="mainContent">
+            <h1 class="game-title">Tutorial Mode</h1>
+            <p class="subtitle">Choose Your B+ Tree Adventure</p>
+            
+            <div class="menu-container">            
+                <div class="menu-buttons">
+                    <button class="menu-button" onclick="startInteractiveMode()">
+                        Interactive B+ Tree
+                        <div class="button-description">Learn by building and exploring B+ trees step by step</div>
+                    </button>
+                    
+                    <button class="menu-button" onclick="startPuzzleMode()">
+                        B+ Tree Puzzle
+                        <div class="button-description">Challenge yourself with B+ tree puzzles and problems</div>
+                    </button>
+                </div>
+                
+                <button class="back-btn" onclick="goBack()">
+                    ← Back to Main Menu
+                </button>
+                
+                <button class="review-btn" onclick="reviewRules()">
+                    Review B+ Tree Rules
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if tutorial was completed before
+        const hasReadTutorial = localStorage.getItem('hasReadBPlusTreeTutorial') === 'true';
+        
+        // Page navigation settings
+        let currentPageIndex = 1;
+        let isReviewMode = false;
+        const totalPages = 4;
+        let visitedPages = new Set([1]); // Pages user has seen
+
+        function showPage(pageIndex) {
+            // Hide all pages
+            document.querySelectorAll('.overlay-page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show current page
+            document.getElementById(`page${pageIndex}`).classList.add('active');
+            
+            // Mark page as visited
+            visitedPages.add(pageIndex);
+            
+            updateDots();
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = pageIndex === 1;
+            document.getElementById('nextBtn').disabled = pageIndex === totalPages;
+            
+            // Enable understand button only if all pages visited
+            const understandBtn = document.getElementById('understandBtn');
+            if (visitedPages.size === totalPages) {
+                understandBtn.disabled = false;
+                // Change button text for review mode
+                understandBtn.textContent = isReviewMode ? "Close" : "I Understand!";
+            } else {
+                understandBtn.disabled = true;
+                understandBtn.textContent = `Read All Pages (${visitedPages.size}/${totalPages})`;
+            }
+        }
+
+        function updateDots() {
+            const dots = document.querySelectorAll('.page-dot');
+            dots.forEach((dot, index) => {
+                const pageNum = index + 1;
+                dot.classList.remove('active', 'completed');
+                
+                if (pageNum === currentPageIndex) {
+                    dot.classList.add('active');
+                } else if (visitedPages.has(pageNum)) {
+                    dot.classList.add('completed');
+                }
+            });
+        }
+
+        function goToPage(pageIndex) {
+            currentPageIndex = pageIndex;
+            showPage(pageIndex);
+        }
+
+        function nextPage() {
+            if (currentPageIndex < totalPages) {
+                currentPageIndex++;
+                showPage(currentPageIndex);
+            }
+        }
+
+        function previousPage() {
+            if (currentPageIndex > 1) {
+                currentPageIndex--;
+                showPage(currentPageIndex);
+            }
+        }
+
+        // Create floating particles
+        function createParticles() {
+            const particleContainer = document.querySelector('.magic-particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                particleContainer.appendChild(particle);
+            }
+        }
+
+        // Close overlay and show main content
+        function closeOverlay() {
+            const overlay = document.getElementById('rulesOverlay');
+            overlay.classList.add('hidden');
+            
+            // Mark as read in localStorage
+            localStorage.setItem('hasReadBPlusTreeTutorial', 'true');
+            
+            setTimeout(() => {
+                document.getElementById('mainContent').style.display = 'block';
+            }, 500);
+        }
+
+        // Function to review rules
+        function reviewRules() {
+            document.getElementById('mainContent').style.display = 'none';
+            const overlay = document.getElementById('rulesOverlay');
+            
+            // Reset overlay display and visibility
+            overlay.style.display = 'flex';
+            overlay.classList.remove('hidden');
+            
+            // Set review mode flag
+            isReviewMode = true;
+            
+            // For review mode, mark all pages as visited so player can navigate freely
+            // and enable the close button immediately
+            visitedPages = new Set([1, 2, 3, 4]);
+            currentPageIndex = 1;
+            showPage(1);
+        }
+
+        // Menu button functions
+        function startInteractiveMode() {
+            // Add transition effect
+            document.body.style.transition = 'opacity 0.5s ease';
+            document.body.style.opacity = '0.3';
+            
+            setTimeout(() => {
+                window.location.href = 'Tutorial_InteractiveBPlusTree.html';
+            }, 500);
+        }
+
+        function startPuzzleMode() {
+            // Add transition effect
+            document.body.style.transition = 'opacity 0.5s ease';
+            document.body.style.opacity = '0.3';
+            
+            setTimeout(() => {
+                window.location.href = 'Tutorial_Puzzle.html';
+            }, 500);
+        }
+
+        function goBack() {
+            // Add transition effect
+            document.body.style.transition = 'opacity 0.5s ease';
+            document.body.style.opacity = '0.3';
+            
+            setTimeout(() => {
+                window.location.href = 'MainMenu.html';
+            }, 500);
+        }
+
+        // Add mouse trail effect
+        let mouseTrailTimeout = null;
+        document.addEventListener('mousemove', (e) => {
+            if (mouseTrailTimeout) return;
+            
+            mouseTrailTimeout = setTimeout(() => {
+                const cursor = document.createElement('div');
+                cursor.style.cssText = `
+                    position: fixed;
+                    left: ${e.clientX}px;
+                    top: ${e.clientY}px;
+                    width: 3px;
+                    height: 3px;
+                    background: #ffd700;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    opacity: 0.6;
+                    box-shadow: 0 0 8px #ffd700;
+                    transition: opacity 0.8s ease;
+                `;
+                
+                document.body.appendChild(cursor);
+                
+                setTimeout(() => {
+                    cursor.style.opacity = '0';
+                    setTimeout(() => cursor.remove(), 800);
+                }, 50);
+                
+                mouseTrailTimeout = null;
+            }, 50);
+        });
+        
+        function initializePage() {
+            // Reset transition effects
+            document.body.style.transition = '';
+            document.body.style.opacity = '1';
+            
+            createParticles();
+            
+            // Check if user has already read the tutorial
+            if (hasReadTutorial) {
+                // Skip overlay and show main content directly for returning users
+                document.getElementById('rulesOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            } else {
+                // Show overlay for first-time users
+                isReviewMode = false;
+                document.getElementById('rulesOverlay').style.display = 'flex';
+                document.getElementById('rulesOverlay').classList.remove('hidden');
+                document.getElementById('mainContent').style.display = 'none';
+                showPage(1);
+            }
+        }
+
+        // Reset opacity when page becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                document.body.style.transition = '';
+                document.body.style.opacity = '1';
+            }
+        });
+
+        // Reset opacity on page show
+        window.addEventListener('pageshow', function(event) {
+            document.body.style.transition = '';
+            document.body.style.opacity = '1';
+        });
+
+        window.addEventListener('load', initializePage);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Magic Book - B+ Tree Puzzle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Creepster&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e8dcc6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background elements */
+        .magic-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffd700;
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            box-shadow: 0 0 10px #ffd700;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        .game-title {
+            font-family: 'Creepster', cursive, Arial, sans-serif;
+            font-size: 4rem;
+            color: #ffd700;
+            text-shadow: 
+                2px 2px 0px #8b4513,
+                4px 4px 0px #654321,
+                0 0 10px #ffd700,
+                0 0 20px #ffd700;
+            margin-bottom: 20px;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.2;
+            z-index: 10;
+            position: relative;
+        }
+        
+        @keyframes titleGlow {
+            from { 
+                text-shadow: 2px 2px 0px #8b4513, 4px 4px 0px #654321, 0 0 10px #ffd700, 0 0 20px #ffd700;
+                transform: scale(1);
+            }
+            to { 
+                text-shadow: 2px 2px 0px #8b4513, 4px 4px 0px #654321, 0 0 15px #ffd700, 0 0 30px #ffd700, 0 0 45px #ffd700;
+                transform: scale(1.02);
+            }
+        }
+
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Content area */
+        .main-content {
+            display: block;
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .main-content h1 {
+            color: #ffd700;
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .main-content p {
+            font-size: 1.4em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #e8dcc6;
+        }
+
+        .subtitle {
+            font-size: 1.8em;
+            color: #e8dcc6;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            font-style: italic;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.5);
+        }
+
+        /* B+ Tree Visualization Styles */
+        .bplustree-container {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+            position: relative;
+        }
+
+        .bplustree-container h3 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+
+        .bplustree-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .bplustree-controls input {
+            padding: 12px 15px;
+            border: 2px solid #ffd700;
+            border-radius: 25px;
+            background: rgba(232, 220, 198, 0.9);
+            color: #1a1a2e;
+            font-size: 1em;
+            font-weight: bold;
+            width: 140px;
+            text-align: center;
+        }
+
+        .bplustree-controls input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
+            color: #e8dcc6;
+            border: 2px solid #ffd700;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(135deg, #ffd700, #ffeb3b);
+            color: #1a1a2e;
+            transform: translateY(-2px);
+        }
+
+        .insert-btn { border-color: #28a745; }
+        .search-btn { border-color: #007bff; }
+        .delete-btn { border-color: #dc3545; }
+        .clear-btn { border-color: #6c757d; }
+
+        .order-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 1px solid #ffd700;
+            flex-wrap: wrap;
+        }
+
+        .order-controls select {
+            padding: 8px 12px;
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            background: rgba(232, 220, 198, 0.9);
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .order-controls select:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .order-controls small {
+            font-style: italic;
+            text-align: center;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .tree-display {
+            min-height: 300px;
+            background: rgba(15, 52, 96, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            position: relative; /* Ensure proper containment for arrows */
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Parent-child connection system - Using working approach */
+        .tree-level {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+            gap: 20px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        .connection-arrow {
+            position: absolute;
+            background: #ffd700;
+            height: 2px;
+            z-index: 1;
+            pointer-events: none;
+            transform-origin: left center;
+        }
+
+        .tree-node {
+            background: linear-gradient(135deg, #2d1b69, #1a1a2e);
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            padding: 15px 20px;
+            min-width: 120px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 3;
+        }
+
+        .tree-node::after {
+            display: none;
+        }
+
+        .tree-node.has-children::after {
+            display: none;
+        }
+
+        .tree-node:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .tree-node.root-node {
+            border-color: #ff6b6b;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .tree-node.leaf-node {
+            border-color: #4ecdc4;
+            box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .tree-node.internal-node {
+            border-color: #9b59b6;
+            box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+        }
+
+        .data-value {
+            background: rgba(78, 205, 196, 0.3);
+            border: 1px solid #4ecdc4;
+        }
+
+        .index-value {
+            background: rgba(155, 89, 182, 0.3);
+            border: 1px solid #9b59b6;
+        }
+
+        .leaf-link {
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4ecdc4;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .tree-node.highlighted {
+            position: relative;
+        }
+
+        .tree-node.highlighted::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            animation: searchPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            z-index: 1;
+        }
+
+        @keyframes searchPulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.8;
+                border-color: #ffd700;
+            }
+            50% { 
+                transform: scale(1.05);
+                opacity: 1;
+                border-color: #ffeb3b;
+            }
+        }
+
+        .tree-node.search-target {
+            position: relative;
+        }
+
+        .tree-node.search-target::after {
+            content: '!';
+            position: absolute;
+            top: -15px;
+            right: -10px;
+            font-size: 2em;
+            font-weight: bold;
+            color: #ff4444;
+            animation: bounce 1s ease-in-out infinite;
+            z-index: 1000;
+            pointer-events: none;
+            display: block;
+            line-height: 1;
+            text-shadow: 0 0 5px #ff4444, 0 0 10px #ff4444;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .node-label {
+            display: block;
+            color: #ffd700;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .node-keys {
+            color: #e8dcc6;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .key-value {
+            background: rgba(255, 215, 0, 0.2);
+            padding: 3px 8px;
+            border-radius: 5px;
+            border: 1px solid #ffd700;
+        }
+
+        .feedback-area {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .tree-message {
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            color: #e8dcc6;
+            font-size: 1.1em;
+            display: none; /* Hide by default */
+        }
+        
+        /* Show message when it has content and specific type */
+        .tree-message.error {
+            display: block;
+            background: rgba(220, 53, 69, 0.2);
+            border: 2px solid #dc3545;
+        }
+
+        .tree-message.success {
+            display: block;
+            background: rgba(40, 167, 69, 0.2);
+            border: 2px solid #28a745;
+        }
+
+        .tree-message.info {
+            display: block;
+            background: rgba(0, 123, 255, 0.2);
+            border: 2px solid #007bff;
+        }
+
+        .search-result {
+            background: rgba(0, 123, 255, 0.2);
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            color: #e8dcc6;
+            font-size: 1.1em;
+            display: none;
+        }
+
+        .search-result.show {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .search-result.found {
+            background: rgba(40, 167, 69, 0.2);
+            border-color: #28a745;
+        }
+
+        .search-result.not-found {
+            background: rgba(220, 53, 69, 0.2);
+            border-color: #dc3545;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sample-operations {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .sample-operations h4 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .sample-btn {
+            background: linear-gradient(135deg, #6f42c1, #5a2d91);
+            color: #e8dcc6;
+            border: 2px solid #ffd700;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .sample-btn:hover {
+            background: linear-gradient(135deg, #ffd700, #ffeb3b);
+            color: #1a1a2e;
+            transform: translateY(-2px);
+        }
+
+        /* Puzzle Game Controls */
+        .puzzle-controls {
+            margin: 30px 0;
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+        }
+
+        .puzzle-controls h4 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .puzzle-btn {
+            background: linear-gradient(135deg, #4a5568, #2d3748);
+            color: #e8dcc6;
+            border: 2px solid #ffd700;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+            min-width: 120px;
+        }
+
+        .puzzle-btn:hover {
+            background: linear-gradient(135deg, #ffd700, #ffeb3b);
+            color: #1a1a2e;
+            transform: translateY(-2px);
+        }
+
+        .check-btn { border-color: #28a745; }
+        .hint-btn { border-color: #17a2b8; }
+        .shuffle-btn { border-color: #fd7e14; }
+        .regenerate-btn { border-color: #6f42c1; }
+        .reveal-btn { border-color: #dc3545; }
+
+        .puzzle-btn:hover.check-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .puzzle-btn:hover.hint-btn {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+        }
+
+        .puzzle-btn:hover.shuffle-btn {
+            background: linear-gradient(135deg, #fd7e14, #e0760d);
+            color: white;
+        }
+
+        .puzzle-btn:hover.regenerate-btn {
+            background: linear-gradient(135deg, #6f42c1, #5a32a3);
+            color: white;
+        }
+
+        .puzzle-btn:hover.reveal-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        /* Draggable nodes for puzzle */
+        .tree-node.draggable {
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+
+        .tree-node.draggable:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+
+        .tree-node.dragging {
+            cursor: grabbing;
+            opacity: 0.7;
+            z-index: 1000;
+        }
+
+        .tree-node.drop-target {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #ffeb3b;
+        }
+
+        .tree-node.correct-position {
+            border-color: #28a745;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.5);
+        }
+
+        .tree-node.wrong-position {
+            border-color: #dc3545;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.5);
+        }
+
+        .tree-node.hint-highlight {
+            border-color: #ffd700;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.8);
+            animation: hintPulse 2s infinite;
+        }
+
+        @keyframes hintPulse {
+            0%, 100% { 
+                box-shadow: 0 5px 20px rgba(255, 215, 0, 0.8);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 5px 30px rgba(255, 215, 0, 1);
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { 
+                box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4), 0 0 15px rgba(255, 215, 0, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 8px 30px rgba(255, 71, 87, 0.7), 0 0 25px rgba(255, 215, 0, 0.6);
+                transform: scale(1.05);
+            }
+        }
+
+        /* Hide labels for increased difficulty */
+        .hide-labels .node-label {
+            display: none;
+        }
+
+        .hide-labels .tree-node {
+            min-height: 60px;
+        }
+
+        /* Compact Toggle Switch */
+        .compact-toggle {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 15px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #ffd700;
+        }
+
+        .compact-toggle input[type="checkbox"] {
+            display: none;
+        }
+
+        .toggle-slider {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: #555;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .toggle-slider:before {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .compact-toggle input:checked + .toggle-slider {
+            background: #ffd700;
+        }
+
+        .compact-toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .toggle-label {
+            font-weight: 500;
+            text-shadow: 0 0 3px rgba(255, 215, 0, 0.3);
+        }
+
+        .toggle-hint {
+            display: block;
+            color: #e8dcc6;
+            font-size: 0.8em;
+            font-style: italic;
+            margin-top: 5px;
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .overlay-content {
+                padding: 30px 20px;
+                max-width: 95%;
+            }
+            
+            .overlay-content h2 {
+                font-size: 1.8em;
+            }
+            
+            .overlay-content h3 {
+                font-size: 1.1em;
+            }
+            
+            .overlay-content p {
+                font-size: 1em;
+            }
+            
+            .overlay-nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-btn {
+                min-width: 120px;
+            }
+
+            /* B+ Tree Mobile Styles */
+            .bplustree-container {
+                padding: 20px 15px;
+                margin: 20px 0;
+            }
+
+            .bplustree-container h3 {
+                font-size: 1.4em;
+            }
+
+            .bplustree-controls {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .bplustree-controls input {
+                width: 200px;
+            }
+
+            .action-btn {
+                min-width: 140px;
+                padding: 10px 15px;
+            }
+
+            .tree-node {
+                min-width: 100px;
+                padding: 12px 15px;
+                margin: 5px;
+            }
+
+            .node-label {
+                font-size: 0.8em;
+            }
+
+            .node-keys {
+                font-size: 1em;
+            }
+
+            .sample-operations {
+                margin: 20px 0;
+            }
+
+            .sample-btn {
+                display: block;
+                width: 100%;
+                max-width: 250px;
+                margin: 10px auto;
+                padding: 12px 15px;
+            }
+
+            .main-content h1 {
+                font-size: 2.2em;
+            }
+
+            .main-content p {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="magic-particles"></div>
+
+    <div class="container">
+        <div class="main-content" id="mainContent">
+            <h1 class="game-title">B+ Tree Puzzle</h1>
+            <p class="subtitle">Recover the Lost Pages of The Magic Book</p>
+            
+            <div class="bplustree-container">
+                <h3>The Lost Pages</h3>
+                
+                <div id="pageStatus" style="text-align: center; margin-bottom: 20px; color: #ffd700; font-size: 1.2em;">
+                    <strong>Pages Recovered: <span id="pageCount">0</span></strong>
+                </div>
+                
+                <div class="order-controls">
+                    <label for="orderSelect" style="color: #ffd700; font-weight: bold;">Magic Rank:</label>
+                    <select id="orderSelect" onchange="changeOrder()">
+                        <option value="3">Rank 1 (Order 3)</option>
+                        <option value="4">Rank 2 (Order 4)</option>
+                        <option value="5" selected>Rank 3 (Order 5)</option>
+                    </select>
+                    <small style="color: #e8dcc6;">Lower rank = lower order, more nodes, higher difficulty</small>
+                </div>
+
+                <div class="tree-display" id="treeDisplay">
+                    <div class="tree-level">
+                        <div class="tree-node root-node" id="rootNode">
+                            <span class="node-label">Root (Empty)</span>
+                            <div class="node-keys"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-area">
+                    <div id="treeMessage" class="tree-message">Explore the B+ Tree structure and operations!</div>
+                </div>
+                
+                <div class="puzzle-controls">
+                    <h4>Ancient Restoration Spells:</h4>
+                    <button class="puzzle-btn check-btn" onclick="checkSolution()">Verify Restoration</button>
+                    <button class="puzzle-btn hint-btn" onclick="showHint()">Consult Wisdom Scroll</button>
+                    <button class="puzzle-btn shuffle-btn" onclick="shuffleNodes()">Scatter Fragments Again</button>
+                    <button class="puzzle-btn regenerate-btn" onclick="regeneratePuzzle()">Discover New Page</button>
+                    <button class="puzzle-btn reveal-btn" onclick="revealSolution()">Divine Revelation</button>
+                    
+                    <div style="margin-top: 15px;">
+                        <label class="compact-toggle" title="Hide labels to make the puzzle more challenging - identify nodes by keys only!">
+                            <input type="checkbox" id="showLabels" checked onchange="toggleLabels()">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Show Mystical Labels</span>
+                        </label>
+                        <small class="toggle-hint">Uncheck for greater challenge</small>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="start-btn" onclick="returnToTutorialMenu()">Return to Tutorial Menu</button>
+        </div>
+    </div>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particleContainer = document.querySelector('.magic-particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                particleContainer.appendChild(particle);
+            }
+        }
+
+        // Add mouse trail effect
+        let mouseTrailTimeout = null;
+        document.addEventListener('mousemove', (e) => {
+            if (mouseTrailTimeout) return;
+            
+            mouseTrailTimeout = setTimeout(() => {
+                const cursor = document.createElement('div');
+                cursor.style.cssText = `
+                    position: fixed;
+                    left: ${e.clientX}px;
+                    top: ${e.clientY}px;
+                    width: 3px;
+                    height: 3px;
+                    background: #ffd700;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    opacity: 0.6;
+                    box-shadow: 0 0 8px #ffd700;
+                    transition: opacity 0.8s ease;
+                `;
+                
+                document.body.appendChild(cursor);
+                
+                setTimeout(() => {
+                    cursor.style.opacity = '0';
+                    setTimeout(() => cursor.remove(), 800);
+                }, 50);
+                
+                mouseTrailTimeout = null;
+            }, 50);
+        });
+
+        function initializePage() {
+            createParticles();
+            setTimeout(() => {
+                initializeRandomTree();
+            }, 500);
+        }
+
+        window.addEventListener('load', initializePage);
+
+        // B+ Tree Implementation
+        class BPlusTree {
+            constructor(order = 3) {
+                this.order = order;
+                this.root = new BPlusNode(true);
+                this.firstLeaf = this.root;
+            }
+
+            insert(key, data = key) {
+                // Find leaf node
+                const leaf = this.findLeaf(key);
+                
+                // Insert into leaf
+                const success = this.insertIntoLeaf(leaf, key, data);
+                
+                // Return if duplicate found
+                if (!success) {
+                    return false;
+                }
+                
+                // Check if leaf needs splitting
+                if (leaf.keys.length > this.order - 1) {
+                    this.splitLeaf(leaf);
+                }
+                
+                this.updateVisualization();
+                return true;
+            }
+
+            findLeaf(key) {
+                let current = this.root;
+                
+                while (!current.isLeaf) {
+                    let i = 0;
+                    while (i < current.keys.length && key >= current.keys[i]) {
+                        i++;
+                    }
+                    current = current.children[i];
+                }
+                
+                return current;
+            }
+
+            insertIntoLeaf(leaf, key, data) {
+                let i = 0;
+                while (i < leaf.keys.length && key > leaf.keys[i]) {
+                    i++;
+                }
+                
+                // Check for duplicates
+                if (i < leaf.keys.length && leaf.keys[i] === key) {
+                    return false;
+                }
+                
+                leaf.keys.splice(i, 0, key);
+                leaf.data.splice(i, 0, data);
+                return true;
+            }
+
+            splitLeaf(leaf) {
+                const mid = Math.ceil((this.order - 1) / 2);
+                
+                // Create new leaf
+                const newLeaf = new BPlusNode(true);
+                newLeaf.keys = leaf.keys.splice(mid);
+                newLeaf.data = leaf.data.splice(mid);
+                
+                // Link leaves
+                newLeaf.next = leaf.next;
+                leaf.next = newLeaf;
+                
+                // Key to promote
+                const promoteKey = newLeaf.keys[0];
+                
+                // Insert into parent or create root
+                if (leaf.parent === null) {
+                    const newRoot = new BPlusNode(false);
+                    newRoot.keys.push(promoteKey);
+                    newRoot.children.push(leaf, newLeaf);
+                    leaf.parent = newRoot;
+                    newLeaf.parent = newRoot;
+                    this.root = newRoot;
+                } else {
+                    this.insertIntoParent(leaf, promoteKey, newLeaf);
+                }
+            }
+
+            insertIntoParent(leftChild, key, rightChild) {
+                const parent = leftChild.parent;
+                rightChild.parent = parent;
+                
+                // Find insertion position
+                let i = 0;
+                while (i < parent.keys.length && key > parent.keys[i]) {
+                    i++;
+                }
+                
+                parent.keys.splice(i, 0, key);
+                parent.children.splice(i + 1, 0, rightChild);
+                
+                // Check if parent needs splitting
+                if (parent.keys.length > this.order - 1) {
+                    this.splitInternal(parent);
+                }
+            }
+
+            splitInternal(node) {
+                const mid = Math.floor(this.order / 2);
+                
+                // Create new internal node
+                const newNode = new BPlusNode(false);
+                const promoteKey = node.keys[mid];
+                
+                // Move keys and children
+                newNode.keys = node.keys.splice(mid + 1);
+                newNode.children = node.children.splice(mid + 1);
+                node.keys.splice(mid, 1); // Remove promoted key
+                
+                // Update parent pointers
+                newNode.children.forEach(child => {
+                    child.parent = newNode;
+                });
+                
+                // Insert into parent or create new root
+                if (node.parent === null) {
+                    const newRoot = new BPlusNode(false);
+                    newRoot.keys.push(promoteKey);
+                    newRoot.children.push(node, newNode);
+                    node.parent = newRoot;
+                    newNode.parent = newRoot;
+                    this.root = newRoot;
+                } else {
+                    this.insertIntoParent(node, promoteKey, newNode);
+                }
+            }
+
+            search(key, path = []) {
+                let current = this.root;
+                path.push(current);
+                
+                // Navigate to leaf
+                while (!current.isLeaf) {
+                    let i = 0;
+                    while (i < current.keys.length && key >= current.keys[i]) {
+                        i++;
+                    }
+                    current = current.children[i];
+                    path.push(current);
+                }
+                
+                // Search in leaf
+                const index = current.keys.indexOf(key);
+                if (index !== -1) {
+                    return { found: true, path, node: current, index, data: current.data[index] };
+                } else {
+                    return { found: false, path };
+                }
+            }
+
+            updateVisualization() {
+                // Skip if building silently
+                if (this.silentMode) return;
+                
+                const display = document.getElementById('treeDisplay');
+                display.innerHTML = this.renderTree();
+                
+                // Create arrows after rendering
+                setTimeout(() => {
+                    this.drawConnections();
+                }, 100);
+            }
+
+            renderTree() {
+                if (!this.root || this.root.keys.length === 0) {
+                    return `
+                        <div class="tree-level">
+                            <div class="tree-node root-node">
+                                <span class="node-label">Root (Empty)</span>
+                                <div class="node-keys">No data</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Create nodeElements map for arrow drawing
+                this.nodeElements = new Map();
+                const levels = this.getLevelsArray();
+                let html = '';
+                
+                levels.forEach((level, levelIndex) => {
+                    html += '<div class="tree-level" data-level="' + levelIndex + '">';
+                    
+                    level.forEach((node, nodeIndex) => {
+                        const nodeClass = levelIndex === 0 ? 'root-node' : (node.isLeaf ? 'leaf-node' : 'internal-node');
+                        const label = levelIndex === 0 ? 'Root' : (node.isLeaf ? 'Leaf (Data)' : 'Internal (Index)');
+                        const hasChildren = !node.isLeaf && node.children && node.children.length > 0;
+                        
+                        // Check if this is actually the bottom level (regardless of node type)
+                        const isBottomLevel = levelIndex === levels.length - 1;
+                        
+                        const nodeId = `node-${levelIndex}-${nodeIndex}`;
+                        
+                        html += `
+                            <div class="tree-node ${nodeClass} ${hasChildren ? 'has-children' : ''}" 
+                                 id="${nodeId}" 
+                                 data-level="${levelIndex}" 
+                                 data-index="${nodeIndex}">
+                                <span class="node-label">${label}</span>
+                                <div class="node-keys">
+                                    ${node.isLeaf ? 
+                                        node.keys.map(key => `<span class="key-value data-value">${key}</span>`).join('') :
+                                        node.keys.map(key => `<span class="key-value index-value">${key}</span>`).join('')
+                                    }
+                                </div>
+                                ${node.next && isBottomLevel ? '<div class="leaf-link">→</div>' : ''}
+                            </div>
+                        `;
+                        
+                        // Store the mapping for later use in drawConnections
+                        setTimeout(() => {
+                            const element = document.getElementById(nodeId);
+                            if (element) {
+                                this.nodeElements.set(node, element);
+                            }
+                        }, 0);
+                    });                    html += '</div>';
+                });
+                
+                return html;
+            }
+
+            renderLevel(nodes, level, totalLevels = null) {
+                if (!nodes.length) return '';
+                
+                // Calculate total levels if not provided
+                if (totalLevels === null) {
+                    totalLevels = this.calculateTotalLevels(nodes[0]);
+                }
+                
+                let html = '<div class="tree-level" data-level="' + level + '">';
+                let nextLevel = [];
+                
+                nodes.forEach((node, index) => {
+                    const nodeClass = level === 0 ? 'root-node' : (node.isLeaf ? 'leaf-node' : 'internal-node');
+                    const label = level === 0 ? 'Root' : (node.isLeaf ? 'Leaf (Data)' : 'Internal (Index)');
+                    const hasChildren = !node.isLeaf && node.children && node.children.length > 0;
+                    
+                    // Check if this is the bottom level
+                    const isBottomLevel = level === totalLevels - 1;
+                    
+                    html += `
+                        <div class="tree-node ${nodeClass} ${hasChildren ? 'has-children' : ''}" 
+                             data-level="${level}" 
+                             data-index="${index}"
+                             data-node-id="${level}-${index}">
+                            <span class="node-label">${label}</span>
+                            <div class="node-keys">
+                                ${node.isLeaf ? 
+                                    node.keys.map(key => `<span class="key-value data-value">${key}</span>`).join('') :
+                                    node.keys.map(key => `<span class="key-value index-value">${key}</span>`).join('')
+                                }
+                            </div>
+                            ${node.next && isBottomLevel ? '<div class="leaf-link">→</div>' : ''}
+                            ${hasChildren ? '<span class="parent-arrow">↓</span>' : ''}
+                        </div>
+                    `;
+                    
+                    if (!node.isLeaf) {
+                        nextLevel.push(...node.children);
+                    }
+                });
+                
+                html += '</div>';
+                
+                if (nextLevel.length > 0) {
+                    html += this.renderLevel(nextLevel, level + 1, totalLevels);
+                }
+                
+                return html;
+            }
+
+            calculateTotalLevels(startNode) {
+                let maxDepth = 1;
+                
+                const traverse = (node, depth) => {
+                    if (depth > maxDepth) {
+                        maxDepth = depth;
+                    }
+                    if (!node.isLeaf && node.children) {
+                        node.children.forEach(child => traverse(child, depth + 1));
+                    }
+                };
+                
+                // Find the root first
+                let root = startNode;
+                while (root.parent) {
+                    root = root.parent;
+                }
+                
+                traverse(root, 1);
+                return maxDepth;
+            }
+
+            drawConnections() {
+                // Remove existing connections
+                const existingConnections = document.querySelectorAll('.connection-arrow');
+                existingConnections.forEach(conn => conn.remove());
+                
+                const treeDisplay = document.getElementById('treeDisplay');
+                if (!treeDisplay) {
+                    return;
+                }
+                
+                // Always rebuild nodeElements mapping to handle DOM changes
+                this.nodeElements = new Map();
+                const levels = this.getLevelsArray();
+                levels.forEach((level, levelIndex) => {
+                    level.forEach((node, nodeIndex) => {
+                        const element = document.getElementById(`node-${levelIndex}-${nodeIndex}`);
+                        if (element) {
+                            this.nodeElements.set(node, element);
+                        }
+                    });
+                });
+                
+                levels.forEach((level, levelIndex) => {
+                    if (levelIndex === levels.length - 1) return; // Skip leaf level
+                    
+                    level.forEach(parentNode => {
+                        const parentElement = this.nodeElements.get(parentNode);
+                        if (!parentElement || !parentNode.children) return;
+                        
+                        parentNode.children.forEach(childNode => {
+                            const childElement = this.nodeElements.get(childNode);
+                            if (!childElement) return;
+                            
+                            // Use the unified arrow drawing approach
+                            drawArrow(parentElement, childElement);
+                        });
+                    });
+                });
+                
+            }
+
+            // Get node at specific level and index
+            getNodeAtPosition(level, index) {
+                const levels = this.getLevelsArray();
+                if (level < levels.length && index < levels[level].length) {
+                    return levels[level][index];
+                }
+                return null;
+            }
+
+            // Get tree structure as array of levels
+            getLevelsArray() {
+                if (!this.root) return [];
+                
+                const levels = [];
+                const queue = [{ node: this.root, level: 0 }];
+                
+                while (queue.length > 0) {
+                    const { node, level } = queue.shift();
+                    
+                    if (!levels[level]) {
+                        levels[level] = [];
+                    }
+                    
+                    levels[level].push(node);
+                    
+                    if (!node.isLeaf && node.children) {
+                        node.children.forEach(child => {
+                            queue.push({ node: child, level: level + 1 });
+                        });
+                    }
+                }
+                
+                return levels;
+            }
+
+            delete(key) {
+                const leaf = this.findLeaf(key);
+                const keyIndex = leaf.keys.indexOf(key);
+                
+                if (keyIndex === -1) {
+                    return false; // Key not found
+                }
+                
+                const deletedKey = leaf.keys[keyIndex];
+                
+                // Remove from leaf
+                leaf.keys.splice(keyIndex, 1);
+                leaf.data.splice(keyIndex, 1);
+                
+                // Handle rebalancing first
+                const minKeys = Math.ceil((this.order - 1) / 2);
+                if (leaf.keys.length < minKeys && leaf !== this.root) {
+                    this.rebalanceLeaf(leaf);
+                } else if (leaf === this.root && leaf.keys.length === 0) {
+                    // Root is empty
+                    this.root = new BPlusNode(true);
+                    this.firstLeaf = this.root;
+                }
+                
+                // Update internal nodes
+                this.updateInternalNodesAfterDelete(deletedKey);
+                
+                this.updateVisualization();
+                return true;
+            }
+
+            updateInternalNodesAfterDelete(deletedKey) {
+                // Find replacement key
+                let replacementKey = this.findReplacementKey(deletedKey);
+                
+                // Update internal nodes
+                if (replacementKey !== null) {
+                    this.updateInternalNodeKey(this.root, deletedKey, replacementKey);
+                } else {
+                    // Remove key from internal nodes
+                    this.removeKeyFromInternalNodes(this.root, deletedKey);
+                }
+            }
+
+            findReplacementKey(deletedKey) {
+                // Find next larger key
+                let current = this.firstLeaf;
+                let replacement = null;
+                
+                while (current) {
+                    for (let key of current.keys) {
+                        if (key > deletedKey && (replacement === null || key < replacement)) {
+                            replacement = key;
+                        }
+                    }
+                    current = current.next;
+                }
+                
+                // If no larger key found, find largest smaller key
+                if (replacement === null) {
+                    current = this.firstLeaf;
+                    while (current) {
+                        for (let key of current.keys) {
+                            if (key < deletedKey && (replacement === null || key > replacement)) {
+                                replacement = key;
+                            }
+                        }
+                        current = current.next;
+                    }
+                }
+                
+                return replacement;
+            }
+
+            updateInternalNodeKey(node, oldKey, newKey) {
+                if (!node || node.isLeaf) {
+                    return;
+                }
+                
+                // Update key if found
+                const keyIndex = node.keys.indexOf(oldKey);
+                if (keyIndex !== -1) {
+                    node.keys[keyIndex] = newKey;
+                }
+                
+                // Update child nodes
+                if (node.children) {
+                    node.children.forEach(child => {
+                        this.updateInternalNodeKey(child, oldKey, newKey);
+                    });
+                }
+            }
+
+            removeKeyFromInternalNodes(node, keyToRemove) {
+                if (!node || node.isLeaf) {
+                    return;
+                }
+                
+                // Remove key if found
+                const keyIndex = node.keys.indexOf(keyToRemove);
+                if (keyIndex !== -1) {
+                    node.keys.splice(keyIndex, 1);
+                    
+                    // Merge children that were separated by this key
+                    if (keyIndex < node.children.length - 1) {
+                        const leftChild = node.children[keyIndex];
+                        const rightChild = node.children[keyIndex + 1];
+                        
+                        // Merge leaf nodes
+                        if (leftChild.isLeaf && rightChild.isLeaf) {
+                            leftChild.keys.push(...rightChild.keys);
+                            leftChild.data.push(...rightChild.data);
+                            leftChild.next = rightChild.next;
+                            
+                            // Remove right child
+                            node.children.splice(keyIndex + 1, 1);
+                        } else if (!leftChild.isLeaf && !rightChild.isLeaf) {
+                            // Merge internal nodes
+                            if (rightChild.keys.length > 0) {
+                                const promoteKey = rightChild.keys[0];
+                                leftChild.keys.push(promoteKey);
+                                leftChild.keys.push(...rightChild.keys.slice(1));
+                                leftChild.children.push(...rightChild.children);
+                                
+                                // Update parent pointers
+                                rightChild.children.forEach(child => child.parent = leftChild);
+                                
+                                // Remove right child
+                                node.children.splice(keyIndex + 1, 1);
+                            } else {
+                                // Right child is empty
+                                node.children.splice(keyIndex + 1, 1);
+                            }
+                        } else {
+                            // Different node types
+                            node.children.splice(keyIndex + 1, 1);
+                        }
+                    }
+                    
+                    // Check if node needs rebalancing
+                    const minKeys = Math.ceil(this.order / 2) - 1;
+                    if (node.keys.length < minKeys && node !== this.root) {
+                        this.rebalanceInternal(node);
+                    } else if (node === this.root && node.keys.length === 0 && node.children.length === 1) {
+                        // Make child the new root
+                        this.root = node.children[0];
+                        this.root.parent = null;
+                    }
+                }
+                
+                // Process child nodes
+                if (node.children) {
+                    // Copy array to avoid issues during iteration
+                    const children = [...node.children];
+                    children.forEach(child => {
+                        this.removeKeyFromInternalNodes(child, keyToRemove);
+                    });
+                }
+            }
+
+            rebalanceLeaf(leaf) {
+                const parent = leaf.parent;
+                if (!parent) return;
+                
+                const leafIndex = parent.children.indexOf(leaf);
+                
+                // Try to borrow from left sibling
+                if (leafIndex > 0) {
+                    const leftSibling = parent.children[leafIndex - 1];
+                    const minKeys = Math.ceil((this.order - 1) / 2);
+                    
+                    if (leftSibling.keys.length > minKeys) {
+                        // Borrow from left
+                        const borrowKey = leftSibling.keys.pop();
+                        const borrowData = leftSibling.data.pop();
+                        
+                        leaf.keys.unshift(borrowKey);
+                        leaf.data.unshift(borrowData);
+                        
+                        // Update parent key
+                        if (leafIndex - 1 < parent.keys.length) {
+                            parent.keys[leafIndex - 1] = leaf.keys[0];
+                        }
+                        return;
+                    }
+                }
+                
+                // Try to borrow from right sibling
+                if (leafIndex < parent.children.length - 1) {
+                    const rightSibling = parent.children[leafIndex + 1];
+                    const minKeys = Math.ceil((this.order - 1) / 2);
+                    
+                    if (rightSibling.keys.length > minKeys) {
+                        // Borrow from right
+                        const borrowKey = rightSibling.keys.shift();
+                        const borrowData = rightSibling.data.shift();
+                        
+                        leaf.keys.push(borrowKey);
+                        leaf.data.push(borrowData);
+                        
+                        // Update parent key
+                        if (leafIndex < parent.keys.length) {
+                            parent.keys[leafIndex] = rightSibling.keys[0];
+                        }
+                        return;
+                    }
+                }
+                
+                // Merge with sibling
+                this.mergeLeaf(leaf, leafIndex);
+            }
+
+            mergeLeaf(leaf, leafIndex) {
+                const parent = leaf.parent;
+                
+                if (leafIndex > 0) {
+                    // Merge with left sibling
+                    const leftSibling = parent.children[leafIndex - 1];
+                    leftSibling.keys.push(...leaf.keys);
+                    leftSibling.data.push(...leaf.data);
+                    leftSibling.next = leaf.next;
+                    
+                    // Remove from parent
+                    parent.keys.splice(leafIndex - 1, 1);
+                    parent.children.splice(leafIndex, 1);
+                } else {
+                    // Merge with right sibling
+                    const rightSibling = parent.children[leafIndex + 1];
+                    leaf.keys.push(...rightSibling.keys);
+                    leaf.data.push(...rightSibling.data);
+                    leaf.next = rightSibling.next;
+                    
+                    // Remove from parent
+                    parent.keys.splice(leafIndex, 1);
+                    parent.children.splice(leafIndex + 1, 1);
+                }
+                
+                // Check parent structure
+                this.ensureNodeStructureValidity(parent);
+                
+                // Check if parent needs rebalancing
+                const minKeys = Math.ceil(this.order / 2) - 1;
+                if (parent.keys.length < minKeys && parent !== this.root) {
+                    this.rebalanceInternal(parent);
+                } else if (parent === this.root && parent.keys.length === 0) {
+                    // Root is empty
+                    if (parent.children.length === 1) {
+                        this.root = parent.children[0];
+                        this.root.parent = null;
+                    } else if (parent.children.length === 0) {
+                        // Tree becomes empty
+                        this.root = new BPlusNode(true);
+                        this.firstLeaf = this.root;
+                    }
+                }
+            }
+
+            // Check node structure is correct
+            ensureNodeStructureValidity(node) {
+                if (!node || node.isLeaf) return;
+                
+                // Internal node should have keys.length + 1 children
+                const expectedChildren = node.keys.length + 1;
+                
+                // Remove excess children
+                while (node.children.length > expectedChildren) {
+                    node.children.pop();
+                }
+            }
+
+            rebalanceInternal(node) {
+                const parent = node.parent;
+                if (!parent) return;
+                
+                const nodeIndex = parent.children.indexOf(node);
+                const minKeys = Math.ceil(this.order / 2) - 1;
+                
+                // Try borrowing from left sibling first
+                if (nodeIndex > 0) {
+                    const leftSibling = parent.children[nodeIndex - 1];
+                    if (leftSibling.keys.length > minKeys) {
+                        // Borrow from left sibling
+                        const separatorKey = parent.keys[nodeIndex - 1];
+                        const borrowedKey = leftSibling.keys.pop();
+                        const borrowedChild = leftSibling.children.pop();
+                        
+                        node.keys.unshift(separatorKey);
+                        node.children.unshift(borrowedChild);
+                        borrowedChild.parent = node;
+                        
+                        parent.keys[nodeIndex - 1] = borrowedKey;
+                        return;
+                    }
+                }
+                
+                // Try borrowing from right sibling
+                if (nodeIndex < parent.children.length - 1) {
+                    const rightSibling = parent.children[nodeIndex + 1];
+                    if (rightSibling.keys.length > minKeys) {
+                        // Borrow from right sibling
+                        const separatorKey = parent.keys[nodeIndex];
+                        const borrowedKey = rightSibling.keys.shift();
+                        const borrowedChild = rightSibling.children.shift();
+                        
+                        node.keys.push(separatorKey);
+                        node.children.push(borrowedChild);
+                        borrowedChild.parent = node;
+                        
+                        parent.keys[nodeIndex] = borrowedKey;
+                        return;
+                    }
+                }
+                
+                // Merge with sibling
+                if (nodeIndex > 0) {
+                    // Merge with left sibling
+                    const leftSibling = parent.children[nodeIndex - 1];
+                    const separatorKey = parent.keys[nodeIndex - 1];
+                    
+                    leftSibling.keys.push(separatorKey, ...node.keys);
+                    leftSibling.children.push(...node.children);
+                    
+                    // Update parent pointers
+                    node.children.forEach(child => child.parent = leftSibling);
+                    
+                    // Remove from parent
+                    parent.keys.splice(nodeIndex - 1, 1);
+                    parent.children.splice(nodeIndex, 1);
+                } else {
+                    // Merge with right sibling
+                    const rightSibling = parent.children[nodeIndex + 1];
+                    const separatorKey = parent.keys[nodeIndex];
+                    
+                    node.keys.push(separatorKey, ...rightSibling.keys);
+                    node.children.push(...rightSibling.children);
+                    
+                    // Update parent pointers
+                    rightSibling.children.forEach(child => child.parent = node);
+                    
+                    // Remove from parent
+                    parent.keys.splice(nodeIndex, 1);
+                    parent.children.splice(nodeIndex + 1, 1);
+                }
+                
+                // Ensure parent structure is valid
+                this.ensureNodeStructureValidity(parent);
+                
+                // Check parent recursively
+                if (parent.keys.length < minKeys && parent !== this.root) {
+                    this.rebalanceInternal(parent);
+                } else if (parent === this.root && parent.keys.length === 0) {
+                    // Root is empty
+                    if (parent.children.length === 1) {
+                        this.root = parent.children[0];
+                        this.root.parent = null;
+                    } else if (parent.children.length === 0) {
+                        // Tree becomes empty
+                        this.root = new BPlusNode(true);
+                        this.firstLeaf = this.root;
+                    }
+                }
+            }
+        }
+
+        // Create B+ tree node
+        class BPlusNode {
+            constructor(isLeaf = false) {
+                this.keys = [];
+                this.children = [];
+                this.data = []; // Only for leaf nodes
+                this.isLeaf = isLeaf;
+                this.parent = null;
+                this.next = null; // Only for leaf nodes
+            }
+        }
+
+        // Global B+ tree instance
+        let bplusTree = new BPlusTree(5);
+        let correctTree = null; // Store correct tree structure
+        let isPuzzleMode = false;
+        let draggedElement = null;
+        let hintCount = 0;
+        const maxHints = 3; // Limit hints to 3 per puzzle
+        let revelationCount = 0;
+        const maxRevelations = 1; // Limit Divine Revelation to 1 per puzzle
+        let pagesRecovered = 0; // Track pages recovered
+        let divineRevelationActive = false; // Track if Divine Revelation is running
+        let skipRevelation = false; // Control variable for skipping animation
+
+        // Initialize tree with random values
+        function initializeRandomTree() {
+            const currentOrder = parseInt(document.getElementById('orderSelect').value);
+            // Ensure minimum values for meaningful puzzle
+            const minValues = Math.max(currentOrder + 1, 6);
+            const maxValues = Math.max(currentOrder + 4, 10);
+            const numValues = Math.floor(Math.random() * (maxValues - minValues + 1)) + minValues;
+            const values = new Set();
+            
+            // Generate unique random values
+            while (values.size < numValues) {
+                const randomValue = Math.floor(Math.random() * 50) + 1;
+                values.add(randomValue);
+            }
+            
+            const sortedValues = Array.from(values).sort((a, b) => a - b);
+            
+            // Build tree silently
+            bplusTree.silentMode = true;
+            sortedValues.forEach(value => {
+                bplusTree.insert(value);
+            });
+            bplusTree.silentMode = false;
+            
+            showMessage(`Page ${pagesRecovered + 1} of the Magic Book has been discovered with sacred numbers: ${sortedValues.join(', ')}. The ancient knowledge awaits restoration!`, 'success');
+            setTimeout(() => {
+                startPuzzle();
+            }, 1500);
+        }
+
+        function startPuzzle() {
+            correctTree = cloneTree(bplusTree);
+            isPuzzleMode = true;
+            hintCount = 0;
+            revelationCount = 0;
+            
+            shuffleNodes();
+        }
+
+        function regeneratePuzzle() {
+            // Reset state
+            isPuzzleMode = false;
+            correctTree = null;
+            hintCount = 0;
+            
+            // Clear highlights and handlers
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('draggable', 'correct-position', 'wrong-position', 'hint-highlight');
+                node.draggable = false;
+            });
+            
+            // Create new tree
+            const currentOrder = parseInt(document.getElementById('orderSelect').value);
+            bplusTree = new BPlusTree(currentOrder);
+            
+            const minValues = Math.max(currentOrder + 1, 6);
+            const maxValues = Math.max(currentOrder + 4, 10);
+            const numValues = Math.floor(Math.random() * (maxValues - minValues + 1)) + minValues;
+            const values = new Set();
+            
+            while (values.size < numValues) {
+                const randomValue = Math.floor(Math.random() * 100) + 1;
+                values.add(randomValue);
+            }
+            
+            const sortedValues = Array.from(values).sort((a, b) => a - b);
+            
+            showMessage(`Searching for Page ${pagesRecovered + 1}...`, 'info');
+            
+            // Build tree silently
+            bplusTree.silentMode = true;
+            sortedValues.forEach(value => {
+                bplusTree.insert(value);
+            });
+            bplusTree.silentMode = false;
+            
+            // Re-enable buttons
+            document.querySelectorAll('.puzzle-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.style.boxShadow = '';
+            });
+            
+            setTimeout(() => {
+                showMessage(`Page ${pagesRecovered + 1} found with numbers: ${sortedValues.join(', ')}. Help restore this knowledge!`, 'success');
+                setTimeout(() => {
+                    startPuzzle();
+                }, 1000);
+            }, 800);
+        }
+
+        function cloneTree(tree) {
+            const clone = new BPlusTree(tree.order);
+            const values = getAllValues(tree);
+            
+            clone.silentMode = true;
+            values.forEach(value => clone.insert(value));
+            clone.silentMode = false;
+            
+            return clone;
+        }
+
+        function getAllValues(tree) {
+            const values = [];
+            let current = tree.firstLeaf;
+            while (current) {
+                values.push(...current.keys);
+                current = current.next;
+            }
+            return values;
+        }
+
+        function shuffleNodes() {
+            if (!correctTree) {
+                showMessage('Please wait for the page to fully materialize!', 'error');
+                return;
+            }
+            
+            bplusTree = cloneTree(correctTree);
+            bplusTree.updateVisualization();
+            
+            setTimeout(() => {
+                scrambleDisplayedNodes();
+                addDragAndDropHandlers();
+                showMessage('The page has been scattered! Drag and drop fragments to restore the knowledge!', 'info');
+            }, 100);
+        }
+        
+        function isPuzzleSolved() {
+            if (!correctTree) return false;
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = correctTree.renderTree();
+            const correctNodes = Array.from(tempDiv.querySelectorAll('.tree-node'));
+            const currentNodes = Array.from(document.querySelectorAll('.tree-node'));
+            
+            for (let i = 0; i < Math.min(correctNodes.length, currentNodes.length); i++) {
+                const currentNodeContent = normalizeNodeContent(currentNodes[i]);
+                const correctNodeContent = normalizeNodeContent(correctNodes[i]);
+                
+                if (currentNodeContent !== correctNodeContent) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function scrambleDisplayedNodes() {
+            const nodes = Array.from(document.querySelectorAll('.tree-node'));
+            if (nodes.length < 2) return;
+            
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            do {
+                // Store node content
+                const nodeData = nodes.map(node => ({
+                    label: node.querySelector('.node-label')?.outerHTML || '',
+                    keys: node.querySelector('.node-keys')?.outerHTML || '',
+                    classes: node.className,
+                    level: node.getAttribute('data-level'),
+                    index: node.getAttribute('data-index'),
+                    id: node.id
+                }));
+                
+                // Fisher-Yates shuffle
+                for (let i = nodeData.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [nodeData[i], nodeData[j]] = [nodeData[j], nodeData[i]];
+                }
+                
+                // Apply shuffled content
+                nodes.forEach((node, index) => {
+                    if (nodeData[index]) {
+                        node.innerHTML = '';
+                        if (nodeData[index].label) {
+                            node.insertAdjacentHTML('beforeend', nodeData[index].label);
+                        }
+                        if (nodeData[index].keys) {
+                            node.insertAdjacentHTML('beforeend', nodeData[index].keys);
+                        }
+                    }
+                });
+                
+                attempts++;
+                
+                if (attempts >= maxAttempts) {
+                    showMessage('The ancient spirits have aligned the fragments perfectly from the start! The puzzle is ready for verification.', 'info');
+                    break;
+                }
+                
+            } while (isPuzzleSolved() && attempts < maxAttempts);
+            
+            updateNodeColors();
+            
+            setTimeout(() => {
+                drawCurrentStructureConnections();
+            }, 100);
+        }
+
+        function updateNodeColors() {
+            const treeLevels = document.querySelectorAll('.tree-level');
+            
+            treeLevels.forEach((level, levelIndex) => {
+                const nodesInLevel = level.querySelectorAll('.tree-node');
+                
+                nodesInLevel.forEach(node => {
+                    node.classList.remove('root-node', 'internal-node', 'leaf-node');
+                    
+                    if (levelIndex === 0) {
+                        node.classList.add('root-node');
+                    } else if (levelIndex === treeLevels.length - 1) {
+                        node.classList.add('leaf-node');
+                    } else {
+                        node.classList.add('internal-node');
+                    }
+                });
+            });
+        }
+
+        function addDragAndDropHandlers() {
+            setTimeout(() => {
+                const nodes = document.querySelectorAll('.tree-node');
+                nodes.forEach(node => {
+                    node.classList.add('draggable');
+                    node.draggable = true;
+                    
+                    node.addEventListener('dragstart', handleDragStart);
+                    node.addEventListener('dragover', handleDragOver);
+                    node.addEventListener('drop', handleDrop);
+                    node.addEventListener('dragend', handleDragEnd);
+                });
+            }, 100);
+        }
+
+        function handleDragStart(e) {
+            // Find tree-node element
+            draggedElement = e.target.closest('.tree-node');
+            if (draggedElement) {
+                draggedElement.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', draggedElement.outerHTML);
+            }
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            
+            // Clear previous highlights
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('drop-target');
+            });
+            
+            // Highlight current target
+            const targetNode = e.target.closest('.tree-node');
+            if (targetNode && targetNode !== draggedElement) {
+                targetNode.classList.add('drop-target');
+            }
+            
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            const targetNode = e.target.closest('.tree-node');
+            
+            if (draggedElement !== targetNode && draggedElement && targetNode) {
+                // Clear highlighting
+                document.querySelectorAll('.tree-node').forEach(node => {
+                    node.classList.remove('hint-highlight', 'drop-target');
+                });
+                
+                // Create clones
+                const draggedClone = draggedElement.cloneNode(true);
+                const targetClone = targetNode.cloneNode(true);
+                
+                const draggedParent = draggedElement.parentNode;
+                const targetParent = targetNode.parentNode;
+                
+                // Swap nodes
+                draggedParent.replaceChild(targetClone, draggedElement);
+                targetParent.replaceChild(draggedClone, targetNode);
+                
+                // Re-add handlers
+                targetClone.classList.add('draggable');
+                targetClone.draggable = true;
+                targetClone.addEventListener('dragstart', handleDragStart);
+                targetClone.addEventListener('dragover', handleDragOver);
+                targetClone.addEventListener('drop', handleDrop);
+                targetClone.addEventListener('dragend', handleDragEnd);
+                
+                draggedClone.classList.add('draggable');
+                draggedClone.draggable = true;
+                draggedClone.addEventListener('dragstart', handleDragStart);
+                draggedClone.addEventListener('dragover', handleDragOver);
+                draggedClone.addEventListener('drop', handleDrop);
+                draggedClone.addEventListener('dragend', handleDragEnd);
+                
+                draggedElement = null;
+                
+                // Update display
+                setTimeout(() => {
+                    updateNodeColors();
+                    drawCurrentStructureConnections();
+                }, 50);
+                
+                showMessage('Page fragments have been rearranged! Check if the ancient knowledge is being restored correctly!', 'info');
+            }
+            
+            // Clean up styling
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('drop-target');
+            });
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            // Clear drag styling
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('dragging', 'drop-target');
+            });
+            draggedElement = null;
+        }
+
+        // Check if current arrangement matches the correct solution
+        function checkSolution() {
+            if (!correctTree) {
+                showMessage('Please find a lost page first!', 'error');
+                return;
+            }
+            
+            // Get the correct solution structure
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = correctTree.renderTree();
+            const correctNodes = Array.from(tempDiv.querySelectorAll('.tree-node'));
+            const currentNodes = Array.from(document.querySelectorAll('.tree-node'));
+            
+            let correctCount = 0;
+            const totalPositions = Math.min(correctNodes.length, currentNodes.length);
+            
+            // Clear previous indicators
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('correct-position', 'wrong-position');
+            });
+            
+            // Compare each position
+            for (let i = 0; i < totalPositions; i++) {
+                const currentNodeContent = normalizeNodeContent(currentNodes[i]);
+                const correctNodeContent = normalizeNodeContent(correctNodes[i]);
+                
+                if (currentNodeContent === correctNodeContent) {
+                    currentNodes[i].classList.add('correct-position');
+                    correctCount++;
+                } else {
+                    currentNodes[i].classList.add('wrong-position');
+                }
+            }
+            
+            const percentage = Math.round((correctCount / totalPositions) * 100);
+            
+            if (percentage === 100) {
+                pagesRecovered++;
+                showMessage(`Page ${pagesRecovered} restored! The ancient knowledge lives on!`, 'success');
+                isPuzzleMode = false;
+                
+                // Highlight all nodes as correct
+                document.querySelectorAll('.tree-node').forEach(node => {
+                    node.classList.remove('wrong-position');
+                    node.classList.add('correct-position');
+                });
+                
+                // Disable all operation buttons except "Discover New Page"
+                document.querySelectorAll('.puzzle-btn:not(.regenerate-btn)').forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                });
+                
+                // Highlight "Discover New Page" button
+                const regenerateBtn = document.querySelector('.regenerate-btn');
+                if (regenerateBtn) {
+                    regenerateBtn.disabled = false;
+                    regenerateBtn.style.opacity = '1';
+                    regenerateBtn.style.cursor = 'pointer';
+                    regenerateBtn.style.boxShadow = '0 0 15px #ffd700';
+                    regenerateBtn.textContent = 'Discover New Page';
+                }
+                
+                // Remove drag handlers since puzzle is complete
+                document.querySelectorAll('.tree-node').forEach(node => {
+                    node.classList.remove('draggable', 'hint-highlight');
+                    node.draggable = false;
+                    node.removeEventListener('dragstart', handleDragStart);
+                    node.removeEventListener('dragover', handleDragOver);
+                    node.removeEventListener('drop', handleDrop);
+                    node.removeEventListener('dragend', handleDragEnd);
+                });
+                
+                // Redraw the connection arrows for the correct solution
+                setTimeout(() => {
+                    bplusTree = cloneTree(correctTree);
+                    // Disable auto-visualization during tree update
+                    bplusTree.silentMode = true;
+                    const display = document.getElementById('treeDisplay');
+                    display.innerHTML = bplusTree.renderTree();
+                    bplusTree.silentMode = false;
+                    
+                    // Draw connections
+                    setTimeout(() => {
+                        bplusTree.drawConnections();
+                    }, 10);
+                    
+                    // Immediately apply green highlighting without type colors
+                    setTimeout(() => {
+                        document.querySelectorAll('.tree-node').forEach(node => {
+                            node.classList.remove('root-node', 'internal-node', 'leaf-node'); // Remove type colors
+                            node.classList.add('correct-position'); // Apply green highlighting
+                        });
+                    }, 15); // Even shorter delay for immediate effect
+                }, 100);
+            } else if (percentage >= 70) {
+                showMessage(`Excellent progress! ${percentage}% of the page has been restored.`, 'success');
+            } else if (percentage >= 40) {
+                showMessage(`Good effort! ${percentage}% of the fragments are in place.`, 'info');
+            } else {
+                showMessage(`${percentage}% recovered. Try consulting the wisdom scroll for guidance!`, 'error');
+            }
+        }
+        
+        function normalizeNodeContent(node) {
+            const label = node.querySelector('.node-label')?.textContent?.trim() || '';
+            const keys = Array.from(node.querySelectorAll('.key-value')).map(k => k.textContent.trim()).sort().join(',');
+            return `${label}:${keys}`;
+        }
+
+        function showHint() {
+            if (!correctTree) {
+                showMessage('Please find a lost page first!', 'error');
+                return;
+            }
+            
+            if (hintCount >= maxHints) {
+                showMessage('No more hints available for this page.', 'error');
+                return;
+            }
+            
+            hintCount++;
+            showSpecificPositionHint();
+        }
+        
+        function showSpecificPositionHint() {
+            // Get correct solution structure
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = correctTree.renderTree();
+            const correctNodes = Array.from(tempDiv.querySelectorAll('.tree-node'));
+            const currentNodes = Array.from(document.querySelectorAll('.tree-node'));
+            
+            // Clear previous hints
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('hint-highlight');
+            });
+            
+            // Find first wrong position by comparing content
+            let positionA = -1;
+            let positionB = -1;
+            
+            for (let i = 0; i < Math.min(correctNodes.length, currentNodes.length); i++) {
+                const currentLabel = currentNodes[i].querySelector('.node-label')?.textContent?.trim() || '';
+                const correctLabel = correctNodes[i].querySelector('.node-label')?.textContent?.trim() || '';
+                const currentKeys = Array.from(currentNodes[i].querySelectorAll('.key-value')).map(k => k.textContent.trim()).sort().join(',');
+                const correctKeys = Array.from(correctNodes[i].querySelectorAll('.key-value')).map(k => k.textContent.trim()).sort().join(',');
+                
+                if (currentLabel !== correctLabel || currentKeys !== correctKeys) {
+                    positionA = i;
+                    
+                    // Find where the correct node currently is
+                    for (let j = 0; j < currentNodes.length; j++) {
+                        const testLabel = currentNodes[j].querySelector('.node-label')?.textContent?.trim() || '';
+                        const testKeys = Array.from(currentNodes[j].querySelectorAll('.key-value')).map(k => k.textContent.trim()).sort().join(',');
+                        
+                        if (testLabel === correctLabel && testKeys === correctKeys) {
+                            positionB = j;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            
+            if (positionA !== -1 && positionB !== -1 && positionA !== positionB) {
+                // Highlight both nodes to swap
+                currentNodes[positionA].classList.add('hint-highlight');
+                currentNodes[positionB].classList.add('hint-highlight');
+                
+                // Get readable descriptions
+                const nodeAKeys = Array.from(currentNodes[positionA].querySelectorAll('.key-value')).map(k => k.textContent.trim()).join(', ');
+                const nodeBKeys = Array.from(currentNodes[positionB].querySelectorAll('.key-value')).map(k => k.textContent.trim()).join(', ');
+                
+                showMessage(`Hint ${hintCount}/${maxHints}: Exchange [${nodeAKeys}] ↔ [${nodeBKeys}]`, 'info');
+            } else if (positionA === -1) {
+                showMessage("Perfect restoration! Verify all knowledge has been recovered!", 'success');
+            } else {
+                showMessage(`Hint ${hintCount}/${maxHints}: Arrange fragments to restore the proper hierarchy!`, 'info');
+            }
+        }
+
+        // Reveal the correct solution with step-by-step animation
+        function revealSolution() {
+            if (!correctTree) {
+                showMessage('Please find a lost page first!', 'error');
+                return;
+            }
+            
+            if (revelationCount >= maxRevelations) {
+                showMessage('Maximum revelations used for this page! Complete manually or seek a new page.', 'error');
+                return;
+            }
+            
+            // Check if puzzle is already solved
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = correctTree.renderTree();
+            const correctNodes = Array.from(tempDiv.querySelectorAll('.tree-node'));
+            const currentNodes = Array.from(document.querySelectorAll('.tree-node'));
+            
+            let isSolved = true;
+            for (let i = 0; i < Math.min(correctNodes.length, currentNodes.length); i++) {
+                const currentNodeContent = normalizeNodeContent(currentNodes[i]);
+                const correctNodeContent = normalizeNodeContent(correctNodes[i]);
+                if (currentNodeContent !== correctNodeContent) {
+                    isSolved = false;
+                    break;
+                }
+            }
+            
+            if (isSolved) {
+                showMessage('The page is already perfect! No intervention needed.', 'success');
+                return;
+            }
+            
+            // Start divine revelation process
+            revelationCount++;
+            divineRevelationActive = true;
+            skipRevelation = false;
+            
+            // Show skip button and start message
+            showSkipButton();
+            showMessage('The spirits are restoring the knowledge step by step... (Click Skip for instant solution)', 'info');
+            
+            // Recursive approach to fix one wrong position at a time
+            function performNextCorrection() {
+                // Check if skip was requested
+                if (skipRevelation) {
+                    completeRevelationInstantly();
+                    return;
+                }
+                
+                // Get fresh node references each time
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = correctTree.renderTree();
+                const correctNodes = Array.from(tempDiv.querySelectorAll('.tree-node'));
+                const currentNodes = Array.from(document.querySelectorAll('.tree-node'));
+                
+                // Find the first wrong position
+                let swapNeeded = false;
+                let fromIndex = -1;
+                let toIndex = -1;
+                
+                for (let i = 0; i < Math.min(correctNodes.length, currentNodes.length); i++) {
+                    const currentNodeContent = normalizeNodeContent(currentNodes[i]);
+                    const correctNodeContent = normalizeNodeContent(correctNodes[i]);
+                    
+                    if (currentNodeContent !== correctNodeContent) {
+                        // Find where the correct content for this position currently is
+                        for (let j = 0; j < currentNodes.length; j++) {
+                            const testContent = normalizeNodeContent(currentNodes[j]);
+                            if (testContent === correctNodeContent) {
+                                fromIndex = j;
+                                toIndex = i;
+                                swapNeeded = true;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                
+                // If no swap needed, puzzle is complete
+                if (!swapNeeded) {
+                    finishRevelation();
+                    return;
+                }
+                
+                // Perform the swap
+                const fromNode = currentNodes[fromIndex];
+                const toNode = currentNodes[toIndex];
+                
+                // Get content descriptions for the message
+                const fromKeys = Array.from(fromNode.querySelectorAll('.key-value')).map(k => k.textContent.trim()).join(', ');
+                const toKeys = Array.from(toNode.querySelectorAll('.key-value')).map(k => k.textContent.trim()).join(', ');
+                
+                // Highlight the nodes being swapped
+                fromNode.classList.add('hint-highlight');
+                toNode.classList.add('hint-highlight');
+                
+                // Calculate how many wrong positions remain for progress tracking
+                let wrongCount = 0;
+                for (let i = 0; i < Math.min(correctNodes.length, currentNodes.length); i++) {
+                    const currentContent = normalizeNodeContent(currentNodes[i]);
+                    const correctContent = normalizeNodeContent(correctNodes[i]);
+                    if (currentContent !== correctContent) wrongCount++;
+                }
+                
+                showMessage(`Divine power restores fragments [${fromKeys}] ↔ [${toKeys}] (${wrongCount} fragments remaining)...`, 'info');
+                
+                setTimeout(() => {
+                    // Check for skip again before performing swap
+                    if (skipRevelation) {
+                        completeRevelationInstantly();
+                        return;
+                    }
+                    
+                    // Perform the swap with proper cloning
+                    const fromClone = fromNode.cloneNode(true);
+                    const toClone = toNode.cloneNode(true);
+                    
+                    // Clear event listeners and classes from clones
+                    [fromClone, toClone].forEach(clone => {
+                        clone.classList.remove('hint-highlight', 'dragging', 'drop-target');
+                        clone.classList.add('draggable');
+                        clone.draggable = true;
+                    });
+                    
+                    const fromParent = fromNode.parentNode;
+                    const toParent = toNode.parentNode;
+                    
+                    // Replace nodes
+                    fromParent.replaceChild(toClone, fromNode);
+                    toParent.replaceChild(fromClone, toNode);
+                    
+                    // Re-add drag event listeners to the new nodes
+                    [fromClone, toClone].forEach(node => {
+                        node.addEventListener('dragstart', handleDragStart);
+                        node.addEventListener('dragover', handleDragOver);
+                        node.addEventListener('drop', handleDrop);
+                        node.addEventListener('dragend', handleDragEnd);
+                    });
+                    
+                    // Update colors and connections
+                    updateNodeColors();
+                    drawCurrentStructureConnections();
+                    
+                    // Clear highlights from all nodes
+                    document.querySelectorAll('.tree-node').forEach(node => {
+                        node.classList.remove('hint-highlight');
+                    });
+                    
+                    // Continue with next correction after a delay
+                    setTimeout(performNextCorrection, 1500);
+                }, 800);
+            }
+            
+            // Start the first correction
+            setTimeout(performNextCorrection, 500);
+        }
+
+        // Show the skip button during Divine Revelation
+        function showSkipButton() {
+            // Remove existing skip button
+            const existingSkipBtn = document.getElementById('skipRevelationBtn');
+            if (existingSkipBtn) {
+                existingSkipBtn.remove();
+            }
+            
+            // Create skip button
+            const skipBtn = document.createElement('button');
+            skipBtn.id = 'skipRevelationBtn';
+            skipBtn.className = 'puzzle-btn skip-btn';
+            skipBtn.innerHTML = 'Skip Animation';
+            skipBtn.style.cssText = `
+                display: block;
+                margin: 20px auto;
+                background: linear-gradient(135deg, #ff4757, #ff6b6b);
+                color: white;
+                border: 2px solid #ffd700;
+                padding: 12px 30px;
+                border-radius: 25px;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4), 0 0 15px rgba(255, 215, 0, 0.3);
+                z-index: 200;
+                animation: pulseGlow 1.5s ease-in-out infinite;
+                font-size: 16px;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+                transform: scale(1);
+                transition: all 0.3s ease;
+                width: fit-content;
+                min-width: 220px;
+                position: relative;
+            `;
+            
+            // Add hover effect
+            skipBtn.addEventListener('mouseenter', () => {
+                skipBtn.style.transform = 'scale(1.1)';
+                skipBtn.style.boxShadow = '0 8px 25px rgba(255, 71, 87, 0.6), 0 0 20px rgba(255, 215, 0, 0.5)';
+            });
+            
+            skipBtn.addEventListener('mouseleave', () => {
+                skipBtn.style.transform = 'scale(1)';
+                skipBtn.style.boxShadow = '0 6px 20px rgba(255, 71, 87, 0.4), 0 0 15px rgba(255, 215, 0, 0.3)';
+            });
+            
+            skipBtn.addEventListener('click', () => {
+                skipRevelation = true;
+                skipBtn.remove();
+                showMessage('Skipping to complete revelation...', 'info');
+            });
+            
+            const treeDisplay = document.getElementById('treeDisplay');
+            if (treeDisplay && treeDisplay.parentNode) {
+                treeDisplay.parentNode.insertBefore(skipBtn, treeDisplay.nextSibling);
+            } else {
+                document.body.appendChild(skipBtn);
+            }
+        }
+
+        function completeRevelationInstantly() {
+            // Clear highlights and stop animations
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('hint-highlight', 'correct-position', 'wrong-position');
+            });
+            
+            // Remove skip button
+            const skipBtn = document.getElementById('skipRevelationBtn');
+            if (skipBtn) {
+                skipBtn.remove();
+            }
+            
+            // Directly apply the correct solution
+            const correctTreeClone = cloneTree(correctTree);
+            // Disable auto-visualization during tree update
+            correctTreeClone.silentMode = true;
+            const display = document.getElementById('treeDisplay');
+            display.innerHTML = correctTreeClone.renderTree();
+            correctTreeClone.silentMode = false;
+            
+            // Update global tree reference
+            bplusTree = correctTreeClone;
+            
+            // Draw connections
+            setTimeout(() => {
+                bplusTree.drawConnections();
+            }, 10);
+            
+            // Wait for DOM update then finish
+            setTimeout(() => {
+                addDragAndDropHandlers();
+                finishRevelation();
+            }, 100);
+        }
+
+        function finishRevelation() {
+            divineRevelationActive = false;
+            
+            // Remove skip button
+            const skipBtn = document.getElementById('skipRevelationBtn');
+            if (skipBtn) {
+                skipBtn.remove();
+            }
+            
+            setTimeout(() => {
+                showMessage('The page has been fully restored! Behold the complete knowledge!', 'success');
+                isPuzzleMode = false;
+                
+                // Disable all operation buttons except "Discover New Page"
+                document.querySelectorAll('.puzzle-btn:not(.regenerate-btn)').forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                });
+                
+                // Highlight "Discover New Page" button
+                const regenerateBtn = document.querySelector('.regenerate-btn');
+                if (regenerateBtn) {
+                    regenerateBtn.style.boxShadow = '0 0 15px #ffd700';
+                    regenerateBtn.textContent = 'Discover New Page';
+                }
+                
+                // Remove drag handlers and clean up
+                document.querySelectorAll('.tree-node').forEach(node => {
+                    node.classList.remove('draggable', 'wrong-position', 'hint-highlight');
+                    node.classList.add('correct-position'); // Keep highlighting for celebration
+                    node.draggable = false;
+                    // Remove all drag event listeners
+                    node.removeEventListener('dragstart', handleDragStart);
+                    node.removeEventListener('dragover', handleDragOver);
+                    node.removeEventListener('drop', handleDrop);
+                    node.removeEventListener('dragend', handleDragEnd);
+                });
+                
+                pagesRecovered++;
+                
+                // Redraw the final correct tree
+                setTimeout(() => {
+                    bplusTree = cloneTree(correctTree);
+                    // Disable auto-visualization during tree update
+                    bplusTree.silentMode = true;
+                    const display = document.getElementById('treeDisplay');
+                    display.innerHTML = bplusTree.renderTree();
+                    bplusTree.silentMode = false;
+                    
+                    // Draw connections
+                    setTimeout(() => {
+                        bplusTree.drawConnections();
+                    }, 10);
+                    
+                    // Immediately apply green highlighting without type colors
+                    setTimeout(() => {
+                        document.querySelectorAll('.tree-node').forEach(node => {
+                            node.classList.remove('root-node', 'internal-node', 'leaf-node'); // Remove type colors
+                            node.classList.add('correct-position'); // Apply green highlighting
+                        });
+                    }, 15); // Even shorter delay for immediate effect
+                }, 100);
+            }, 1000);
+        }
+
+        function clearTree() {
+            const orderSelect = document.getElementById('orderSelect');
+            const currentOrder = parseInt(orderSelect.value);
+            
+            bplusTree = new BPlusTree(currentOrder);
+            correctTree = null;
+            isPuzzleMode = false;
+            hintCount = 0;
+            revelationCount = 0; // Reset revelation count
+            clearHighlights();
+            
+            // Re-enable all puzzle buttons for new puzzle
+            document.querySelectorAll('.puzzle-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.style.boxShadow = '';
+            });
+            
+            // Reinitialize with new random values
+            initializeRandomTree();
+        }
+
+        function changeOrder() {
+            const orderSelect = document.getElementById('orderSelect');
+            const newOrder = parseInt(orderSelect.value);
+            
+            // Clear current tree and create new one with different order
+            bplusTree = new BPlusTree(newOrder);
+            correctTree = null;
+            isPuzzleMode = false;
+            hintCount = 0;
+            revelationCount = 0; // Reset revelation count
+            clearHighlights();
+            
+            // Re-enable all puzzle buttons for new puzzle
+            document.querySelectorAll('.puzzle-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.style.boxShadow = '';
+            });
+            
+            // Initialize with random values for the new order
+            initializeRandomTree();
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('highlighted', 'search-target', 'correct-position', 'wrong-position', 'hint-highlight');
+            });
+        }
+
+        // Toggle node labels for difficulty control
+        function toggleLabels() {
+            const showLabels = document.getElementById('showLabels').checked;
+            const treeDisplay = document.getElementById('treeDisplay');
+            
+            if (showLabels) {
+                treeDisplay.classList.remove('hide-labels');
+            } else {
+                treeDisplay.classList.add('hide-labels');
+            }
+            
+            // Recalculate arrows based on current structure
+            setTimeout(() => {
+                drawCurrentStructureConnections();
+            }, 100);
+        }
+        
+        // Draw connections based on current DOM structure for puzzle mode
+        function drawCurrentStructureConnections() {
+            // Remove existing connections
+            const existingConnections = document.querySelectorAll('.connection-arrow');
+            existingConnections.forEach(conn => conn.remove());
+            
+            const treeDisplay = document.getElementById('treeDisplay');
+            if (!treeDisplay) {
+                return;
+            }
+            
+            // Force DOM update before getting elements
+            treeDisplay.offsetHeight;
+            
+            const treeLevels = document.querySelectorAll('.tree-level');
+            
+            if (treeLevels.length < 2) return; // Need at least 2 levels for connections
+            
+            // Use the correct tree structure to determine proper connections
+            if (correctTree) {
+                drawCorrectStructureConnections();
+                return;
+            }
+            
+            // Fallback to simple distribution if no correct tree available
+            for (let levelIndex = 0; levelIndex < treeLevels.length - 1; levelIndex++) {
+                const currentLevel = treeLevels[levelIndex];
+                const nextLevel = treeLevels[levelIndex + 1];
+                
+                const parentNodes = Array.from(currentLevel.querySelectorAll('.tree-node'));
+                const childNodes = Array.from(nextLevel.querySelectorAll('.tree-node'));
+                
+                // Simple even distribution for fallback
+                parentNodes.forEach((parentNode, parentIndex) => {
+                    const childrenPerParent = Math.ceil(childNodes.length / parentNodes.length);
+                    const startChildIndex = parentIndex * childrenPerParent;
+                    const endChildIndex = Math.min(startChildIndex + childrenPerParent, childNodes.length);
+                    
+                    for (let childIndex = startChildIndex; childIndex < endChildIndex; childIndex++) {
+                        if (childNodes[childIndex]) {
+                            drawArrow(parentNode, childNodes[childIndex]);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Draw connections based on the correct tree structure for puzzle mode
+        function drawCorrectStructureConnections() {
+            if (!correctTree) return;
+            
+            // Get the correct tree structure
+            const correctLevels = correctTree.getLevelsArray();
+            const domLevels = document.querySelectorAll('.tree-level');
+            
+            // Map correct structure to current DOM positions
+            correctLevels.forEach((correctLevel, levelIndex) => {
+                if (levelIndex >= domLevels.length - 1) return; // Skip last level
+                
+                const currentDOMLevel = domLevels[levelIndex];
+                const nextDOMLevel = domLevels[levelIndex + 1];
+                
+                const parentDOMNodes = Array.from(currentDOMLevel.querySelectorAll('.tree-node'));
+                const childDOMNodes = Array.from(nextDOMLevel.querySelectorAll('.tree-node'));
+                
+                correctLevel.forEach((correctParentNode, parentIndex) => {
+                    if (!correctParentNode.children || parentIndex >= parentDOMNodes.length) return;
+                    
+                    const parentDOMNode = parentDOMNodes[parentIndex];
+                    
+                    // For each child in the correct structure, find corresponding DOM child
+                    correctParentNode.children.forEach((correctChildNode, childIndex) => {
+                        // Find which position this child should be at in the next level
+                        const correctNextLevel = correctLevels[levelIndex + 1];
+                        const childPositionInLevel = correctNextLevel.indexOf(correctChildNode);
+                        
+                        if (childPositionInLevel !== -1 && childPositionInLevel < childDOMNodes.length) {
+                            const childDOMNode = childDOMNodes[childPositionInLevel];
+                            drawArrow(parentDOMNode, childDOMNode);
+                        }
+                    });
+                });
+            });
+        }
+        
+        function drawArrow(parentNode, childNode) {
+            const treeDisplay = document.getElementById('treeDisplay');
+            if (!treeDisplay) return;
+            
+            const containerRect = treeDisplay.getBoundingClientRect();
+            const parentRect = parentNode.getBoundingClientRect();
+            const childRect = childNode.getBoundingClientRect();
+            
+            // Calculate positions
+            const parentX = parentRect.left - containerRect.left + parentRect.width / 2;
+            const parentY = parentRect.bottom - containerRect.top;
+            const childX = childRect.left - containerRect.left + childRect.width / 2;
+            const childY = childRect.top - containerRect.top;
+            
+            // Calculate arrow properties
+            const deltaX = childX - parentX;
+            const deltaY = childY - parentY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+            
+            // Create arrow element
+            const arrow = document.createElement('div');
+            arrow.className = 'connection-arrow';
+            arrow.style.position = 'absolute';
+            arrow.style.width = distance + 'px';
+            arrow.style.height = '2px';
+            arrow.style.left = parentX + 'px';
+            arrow.style.top = parentY + 'px';
+            arrow.style.background = '#ffd700';
+            arrow.style.transformOrigin = 'left center';
+            arrow.style.transform = `rotate(${angle}deg)`;
+            arrow.style.zIndex = '1';
+            arrow.style.pointerEvents = 'none';
+            
+            // Add arrowhead
+            arrow.innerHTML = '<div style="position: absolute; right: 0; top: -6px; width: 0; height: 0; border-left: 8px solid #ffd700; border-top: 6px solid transparent; border-bottom: 6px solid transparent; transform: translateX(8px);"></div>';
+            
+            treeDisplay.appendChild(arrow);
+        }
+        
+        function clearMessage() {
+            const messageEl = document.getElementById('treeMessage');
+            messageEl.textContent = '';
+            messageEl.className = 'tree-message';
+        }
+
+        function showMessage(message, type) {
+            const messageEl = document.getElementById('treeMessage');
+            messageEl.textContent = message;
+            messageEl.className = `tree-message ${type}`;
+        }
+
+        function insertValueById(value) {
+            const success = bplusTree.insert(value);
+            if (success) {
+                showMessage(`Knowledge ${value} has been inscribed into the page!`, 'success');
+            } else {
+                showMessage(`The knowledge ${value} already exists in this page!`, 'error');
+            }
+        }
+
+        // Get knowledge gained from recovering a specific page
+        function getPageKnowledge(pageNumber) {
+            const knowledgeList = [
+                "B+ Trees store all data in leaf nodes for efficient range queries",
+                "Internal nodes in B+ Trees only store keys for navigation",
+                "B+ Trees maintain balance through node splitting and merging", 
+                "Leaf nodes are linked together for sequential access",
+                "B+ Trees have order (m) which determines maximum keys per node",
+                "All leaf nodes are at the same level in B+ Trees",
+                "B+ Trees are optimized for disk-based storage systems",
+                "Range queries are faster in B+ Trees than binary search trees",
+                "B+ Trees minimize disk I/O operations through high fanout",
+                "Insertion and deletion maintain the tree's balanced structure"
+            ];
+            
+            // Return knowledge based on page number (cycling through if more than 10 pages)
+            return knowledgeList[(pageNumber - 1) % knowledgeList.length];
+        }
+
+        function returnToTutorialMenu() {
+            window.location.href = 'Tutorial_Menu.html';
+        }
+    </script>
+</body>
+</html>
