@@ -179,11 +179,6 @@
             transform: translateY(-2px);
         }
         
-        .button-icon {
-            margin-right: 10px;
-            font-size: 1.6rem;
-        }
-        
         .button-description {
             font-size: 0.9rem;
             color: #d4af37;
@@ -192,9 +187,29 @@
             font-style: italic;
         }
         
-        @keyframes bookFloat {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-10px) rotate(5deg); }
+        .back-btn {
+            background: linear-gradient(135deg, #666, #888);
+            border: 2px solid #ccc;
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-family: 'Georgia', serif;
+            font-weight: normal;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #777, #999);
         }
         
         @media (max-width: 768px) {
@@ -218,26 +233,25 @@
     <div class="magic-particles"></div>
     
     <div class="main-container">
-        <h1 class="game-title">The Magic Book</h1>
-        <p class="subtitle">Master the Ancient Art of B+ Tree Magic</p>
+        <h1 class="game-title">Solo Mode</h1>
+        <p class="subtitle">Master B+ Trees at Your Own Pace</p>
         
         <div class="menu-container">            
             <div class="menu-buttons">
                 <button class="menu-button" onclick="startTutorial()">
                     Tutorial Mode
-                    <div class="button-description">Learn the fundamentals of B+ Tree magic</div>
+                    <div class="button-description">Guided learning with B+ trees, puzzles, and monster combat</div>
                 </button>
                 
-                <button class="menu-button" onclick="startBattle()">
-                    Battle Mode
-                    <div class="button-description">Challenge mystical creatures with your knowledge</div>
-                </button>
-                
-                <button class="menu-button" onclick="startCollaboration()">
-                    Collaboration Mode
-                    <div class="button-description">Join forces with other apprentice wizards</div>
+                <button class="menu-button" onclick="startPractice()">
+                    Practice Mode
+                    <div class="button-description">Independent challenges, timed puzzles, and monster battles</div>
                 </button>
             </div>
+            
+            <button class="back-btn" onclick="goBack()">
+                ← Back to Main Menu
+            </button>
         </div>
     </div>
     
@@ -265,27 +279,27 @@
             document.body.style.opacity = '0.3';
             
             setTimeout(() => {
-                window.location.href = 'Tutorial_Menu.html';
+                window.location.href = 'tutorial_menu.html';
             }, 500);
         }
         
-        function startBattle() {
+        function startPractice() {
             // Add transition effect
             document.body.style.transition = 'opacity 0.5s ease';
             document.body.style.opacity = '0.3';
             
             setTimeout(() => {
-                window.location.href = 'battle.html';
+                window.location.href = 'practice_menu.html';
             }, 500);
         }
         
-        function startCollaboration() {
+        function goBack() {
             // Add transition effect
             document.body.style.transition = 'opacity 0.5s ease';
             document.body.style.opacity = '0.3';
             
             setTimeout(() => {
-                window.location.href = 'collaboration.html';
+                window.location.href = 'main_menu.html';
             }, 500);
         }
         
