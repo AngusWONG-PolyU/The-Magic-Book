@@ -1023,10 +1023,13 @@
                 return result;
             }
 
-            drawArrow(parentElement, childElement, container) {
-                const containerRect = container.getBoundingClientRect();
-                const parentRect = parentElement.getBoundingClientRect();
-                const childRect = childElement.getBoundingClientRect();
+            drawArrow(parentNode, childNode) {
+                const treeDisplay = document.getElementById('treeDisplay');
+                if (!treeDisplay) return;
+                
+                const containerRect = treeDisplay.getBoundingClientRect();
+                const parentRect = parentNode.getBoundingClientRect();
+                const childRect = childNode.getBoundingClientRect();
                 
                 // Calculate positions
                 const parentX = parentRect.left - containerRect.left + parentRect.width / 2;
@@ -1057,7 +1060,7 @@
                 // Add arrowhead
                 arrow.innerHTML = '<div style="position: absolute; right: 0; top: -6px; width: 0; height: 0; border-left: 8px solid #ffd700; border-top: 6px solid transparent; border-bottom: 6px solid transparent; transform: translateX(8px);"></div>';
                 
-                container.appendChild(arrow);
+                treeDisplay.appendChild(arrow);
             }
 
             drawConnections() {
@@ -1084,7 +1087,7 @@
                             if (!childElement) return;
                             
                             // Draw arrow from parent to child
-                            this.drawArrow(parentElement, childElement, treeDisplay);
+                            this.drawArrow(parentElement, childElement);
                         });
                     });
                 });

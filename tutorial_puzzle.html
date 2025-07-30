@@ -1245,7 +1245,7 @@
                             const childElement = this.nodeElements.get(childNode);
                             if (!childElement) return;
                             
-                            // Use the unified arrow drawing approach
+                            // Draw arrow from parent to child
                             drawArrow(parentElement, childElement);
                         });
                     });
@@ -2727,25 +2727,6 @@
             } else {
                 showMessage(`The knowledge ${value} already exists in this page!`, 'error');
             }
-        }
-
-        // Get knowledge gained from recovering a specific page
-        function getPageKnowledge(pageNumber) {
-            const knowledgeList = [
-                "B+ Trees store all data in leaf nodes for efficient range queries",
-                "Internal nodes in B+ Trees only store keys for navigation",
-                "B+ Trees maintain balance through node splitting and merging", 
-                "Leaf nodes are linked together for sequential access",
-                "B+ Trees have order (m) which determines maximum keys per node",
-                "All leaf nodes are at the same level in B+ Trees",
-                "B+ Trees are optimized for disk-based storage systems",
-                "Range queries are faster in B+ Trees than binary search trees",
-                "B+ Trees minimize disk I/O operations through high fanout",
-                "Insertion and deletion maintain the tree's balanced structure"
-            ];
-            
-            // Return knowledge based on page number (cycling through if more than 10 pages)
-            return knowledgeList[(pageNumber - 1) % knowledgeList.length];
         }
 
         function returnToTutorialMenu() {
